@@ -1,6 +1,6 @@
 # coinwatch
 
-A [re-frame](https://github.com/Day8/re-frame) application designed to ... well, that part is up to you.
+ [re-frame](https://github.com/Day8/re-frame) application designed to ... well, that part is up to you.
 
 ## Development Mode
 
@@ -33,6 +33,7 @@ lein garden auto
 ```
 lein clean
 lein figwheel dev
+lein ring server-headless
 ```
 
 Figwheel will automatically push cljs changes to the browser.

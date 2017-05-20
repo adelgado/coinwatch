@@ -6,6 +6,13 @@
             [clojure.core.async :as async]
             compojure.api.async))
 
+(def currency (atom {}))
+
+(defn update-currency! [c]
+  (reset! currency c))
+
+
+
 (def app
   (api
    {:swagger
@@ -18,48 +25,24 @@
    (context "/api" []
      :tags ["api"]
 
-     (GET "/plus" []
-       :return {:result Long}
-       :query-params [x :- Long, y :- Long]
-       :summary "adds two numbers together"
-       (ok {:result (+ x y)}))
-
-     (GET "/minus" []
-       :return {:result Long}
-       :query-params [x :- Long, y :- Long]
-       :summary "subtract two numbers from each other"
-       (fn [_ respond _]
-         (future
-           (respond (ok {:result (- x y)})))
-         nil))
-
-     (GET "/times" []
-       :return {:result Long}
-       :query-params [x :- Long, y :- Long]
-       :summary "multiply two numbers together"
-       (let [d (d/deferred)]
-         (future
-           (d/success! d (ok {:result (* x y)})))
-         d))
-
-     (GET "/divide" []
-       :return {:result Float}
-       :query-params [x :- Long, y :- Long]
-       :summary "divide two numbers together"
+     (GET "/price" []
+       :return {:displayName String
+                :symbol String
+                :price Long}
+       ;:query-params [x :- Long, y :- Long]
+       :summary "returns bitcoin price in US dollar"
        (let [chan (async/chan)]
          (future
            (async/go
              (try
-               (async/>! chan (ok {:result (float (/ x y))}))
+               (async/>!
+                chan
+                 (ok {:displayName "bitcoin"
+                      :symbol "BTC"
+                      :price 76387462}))
                (catch Throwable e
                  (async/>! chan e))
                (finally
                  (async/close! chan)))))
-         chan)))
-   (context "/resource" []
-     (resource
-      {:responses {200 {:schema {:total Long}}}
-       :handler (fn [_ respond _]
-                  (future
-                    (respond (ok {:total 42})))
-                  nil)}))))
+         chan)))))
+
