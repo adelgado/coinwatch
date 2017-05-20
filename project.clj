@@ -1,5 +1,13 @@
 (defproject coinwatch "0.1.0-SNAPSHOT"
-  :dependencies [[org.clojure/clojure "1.8.0"]
+  :dependencies [;server side deps
+                 [org.clojure/clojure "1.8.0"]
+                 [metosin/compojure-api "1.2.0-alpha6" :exclude [compojure, metosin/muuntaja]]
+                 [ring/ring "1.6.0-RC1"]
+                 [compojure "1.6.0-beta3"]
+                 [manifold "0.1.6"]
+                 [org.clojure/core.async "0.3.441"]
+
+                 ;client side deps
                  [org.clojure/clojurescript "1.9.229"]
                  [reagent "0.6.0"]
                  [re-frame "0.9.2"]
@@ -12,6 +20,10 @@
 
   :plugins [[lein-cljsbuild "1.1.4"]
             [lein-garden "0.2.8"]]
+  :ring {:handler coinwatch.handler/app
+         :async? true}
+
+  :uberjar-name "server.jar"
 
   :min-lein-version "2.5.3"
 
@@ -37,7 +49,8 @@
                    [figwheel-sidecar "0.5.9"]
                    [com.cemerick/piggieback "0.2.1"]]
 
-    :plugins      [[lein-figwheel "0.5.9"]
+    :plugins      [[lein-ring "0.11.0"]
+                   [lein-figwheel "0.5.9"]
                    [lein-doo "0.1.7"]]
     }}
 
