@@ -10,19 +10,33 @@
 
 (def currency (atom {}))
 
-;(defn get-currency [url currency]
-;  (async/go
-;    (let [{:keys [status body] :as req}
-;          (async/<! (kvlt.chan/request! {:url url :as :json}))]
-;      (if (not= status 200)
-;        (prn "error requesting currency")
-;        (let [display-name (:chartName body)
-;              {:keys [code rate]} (-> body
-;                                      (:bpi)
-;                                      (:USD))]
-;          (reset! currency {:display-name display-name
-;                            :code code
-;                            :rate rate}))))))
+(defn get-currency* []
+  (let [time (System/currentTimeMillis)
+        url "http://api.coindesk.com/v1/bpi/currentprice.json"]
+    (async/go
+      (let [{:keys [status body] :as req}
+            (async/<! (kvlt.chan/request! {:url url :as :json}))]
+        (if (not= status 200)
+          (prn "error requesting currency")
+          (let [display-name (:chartName body)
+                {:keys [code rate]} (-> body
+                                        (:bpi)
+                                        (:USD))]
+            (reset! currency {:displayName display-name
+                              :symbol code
+                              :time time
+                              :price rate})
+            (prn @currency)))))))
+
+(defn start-loop [ms-interval]
+  (future
+    (while true
+      (do
+        (Thread/sleep ms-interval)
+        (get-currency*)))))
+
+(def job (start-loop 1000))
+
 (defn get-currency [url]
   (let [{:keys [status body] :as req}
         @(kvlt/request! {:url url :as :json})]
@@ -36,13 +50,6 @@
          :symbol code
          :price rate}))))
 
-(get-currency "http://api.coindesk.com/v1/bpi/currentprice.json")
-
-currency
-
-(defn update-currency! [c]
-  (reset! currency c))
-
 (def app
   (api
    {:swagger
@@ -55,9 +62,14 @@ currency
    (context "/api" []
      :tags ["api"]
 
+     (GET "/cancel" []
+       :summary "cancel fetching"
+       (ok (future-cancel job)))
+
      (GET "/price" []
        :return {:displayName String
                 :symbol String
+                :time Long
                 ;:price Long}
                 :price String}
        ;:query-params [x :- Long, y :- Long]
@@ -69,7 +81,7 @@ currency
                (async/>!
                 chan
                 (->
-                 (ok (get-currency "http://api.coindesk.com/v1/bpi/currentprice.json"))
+                 (ok @currency)
                  (assoc-in
                   [:headers "Access-Control-Allow-Origin"]
                   "*")
