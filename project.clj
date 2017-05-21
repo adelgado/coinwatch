@@ -5,6 +5,7 @@
                  [ring/ring "1.6.0-RC1"]
                  [compojure "1.6.0-beta3"]
                  [manifold "0.1.6"]
+                 [io.nervous/kvlt "0.1.4"]
                  [org.clojure/core.async "0.3.441"]
 
                  ;client side deps
