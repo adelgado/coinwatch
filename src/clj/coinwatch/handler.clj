@@ -2,12 +2,43 @@
   "Asynchronous compojure-api application."
   (:require [clojure.core.async :as async]
             [compojure.api.sweet :refer :all]
+            [kvlt.core :as kvlt]
+            [kvlt.chan :as kchan]
             [ring.util.http-response :refer :all]
             [manifold.deferred :as d]
-            compojure.api.async
-            ))
+            compojure.api.async))
 
 (def currency (atom {}))
+
+;(defn get-currency [url currency]
+;  (async/go
+;    (let [{:keys [status body] :as req}
+;          (async/<! (kvlt.chan/request! {:url url :as :json}))]
+;      (if (not= status 200)
+;        (prn "error requesting currency")
+;        (let [display-name (:chartName body)
+;              {:keys [code rate]} (-> body
+;                                      (:bpi)
+;                                      (:USD))]
+;          (reset! currency {:display-name display-name
+;                            :code code
+;                            :rate rate}))))))
+(defn get-currency [url]
+  (let [{:keys [status body] :as req}
+        @(kvlt/request! {:url url :as :json})]
+    (if (not= status 200)
+      (prn "error requesting currency")
+      (let [display-name (:chartName body)
+            {:keys [code rate]} (-> body
+                                    (:bpi)
+                                    (:USD))]
+        {:displayName display-name
+         :symbol code
+         :price rate}))))
+
+(get-currency "http://api.coindesk.com/v1/bpi/currentprice.json")
+
+currency
 
 (defn update-currency! [c]
   (reset! currency c))
@@ -27,7 +58,8 @@
      (GET "/price" []
        :return {:displayName String
                 :symbol String
-                :price Long}
+                ;:price Long}
+                :price String}
        ;:query-params [x :- Long, y :- Long]
        :summary "returns bitcoin price in US dollar"
        (let [chan (async/chan)]
@@ -37,9 +69,7 @@
                (async/>!
                 chan
                 (->
-                 (ok {:displayName "bitcoin"
-                       :symbol "BTC"
-                      :price 76387462})
+                 (ok (get-currency "http://api.coindesk.com/v1/bpi/currentprice.json"))
                  (assoc-in
                   [:headers "Access-Control-Allow-Origin"]
                   "*")
