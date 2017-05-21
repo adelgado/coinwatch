@@ -8,7 +8,7 @@
   (let [price (re-frame/subscribe [:price])]
     (fn []
       [:div ""
-        [:div (str "Current price is" @price)]
+        [:div (str "Current price is " @price)]
         [:button {:on-click #(re-frame/dispatch [:request-price])} "Update price"]
         [:div [:a {:href "#/about"} "About"]]])))
 
