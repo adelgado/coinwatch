@@ -31,7 +31,7 @@
           (recur))))
     interrupt-chan))
 
-(def loop-control-chan (update-currency-loop 3000))
+;(def loop-control-chan (update-currency-loop 3000))
 
 ;(async/close! loop-control-chan)
 
@@ -47,22 +47,21 @@
    (context "/api" []
      :tags ["api"]
 
-     (GET "/cancel" []
+     #_(GET "/cancel" []
        :summary "cancel fetching"
        (do
          (async/close! loop-control-chan)
          (ok {})))
 
      (GET "/price" []
-       :return {:displayName String
-                :symbol String
-                :dateTime String
-                                        ;:price Long}
-                :price String}
+       ;:return {:displayName String
+       ;         :symbol String
+       ;         :dateTime String
+       ;                                 ;:price Long}
+       ;         :price String}
                                         ;:query-params [x :- Long, y :- Long]
        :summary "returns bitcoin price in US dollar"
        (let [chan (async/chan)]
-         (future
            (async/go
              (try
                (async/>!
@@ -81,6 +80,6 @@
                (catch Throwable e
                  (async/>! chan e))
                (finally
-                 (async/close! chan)))))
+                 (async/close! chan))))
          chan)))))
 
