@@ -10,45 +10,30 @@
 
 (def currency (atom {}))
 
-(defn get-currency* []
-  (let [time (System/currentTimeMillis)
-        url "http://api.coindesk.com/v1/bpi/currentprice.json"]
-    (async/go
-      (let [{:keys [status body] :as req}
-            (async/<! (kvlt.chan/request! {:url url :as :json}))]
-        (if (not= status 200)
-          (prn "error requesting currency")
-          (let [display-name (:chartName body)
-                {:keys [code rate]} (-> body
-                                        (:bpi)
-                                        (:USD))]
-            (reset! currency {:displayName display-name
-                              :symbol code
-                              :time time
-                              :price rate})
-            (prn @currency)))))))
+(def continue-loop? (atom true))
 
-(defn start-loop [ms-interval]
-  (future
-    (while true
-      (do
-        (Thread/sleep ms-interval)
-        (get-currency*)))))
+(defn update-currency-loop [ms]
+  (let [url "http://api.coindesk.com/v1/bpi/currentprice.json"]
+    (async/go-loop []
+      (let [{:keys [body status headers]} (async/<!
+                                           (kvlt.chan/request!
+                                            {:url url :as :json}))
+            {:keys [code rate]} (-> body (:bpi) (:USD))]
+        (when (= status 200)
+          (reset! currency
+                  {:displayName (:chartName body)
+                   :symbol code
+                   :dateTime (:date headers)
+                   :price rate})
+          (prn @currency))
+        (async/<! (async/timeout ms))
+        (if @continue-loop?
+          (recur))))))
 
-(def job (start-loop 1000))
+(update-currency-loop 1000)
+;@currency
+;(reset! continue-loop? false)
 
-(defn get-currency [url]
-  (let [{:keys [status body] :as req}
-        @(kvlt/request! {:url url :as :json})]
-    (if (not= status 200)
-      (prn "error requesting currency")
-      (let [display-name (:chartName body)
-            {:keys [code rate]} (-> body
-                                    (:bpi)
-                                    (:USD))]
-        {:displayName display-name
-         :symbol code
-         :price rate}))))
 
 (def app
   (api
@@ -64,12 +49,12 @@
 
      (GET "/cancel" []
        :summary "cancel fetching"
-       (ok (future-cancel job)))
+       (ok (reset! continue-loop? false)))
 
      (GET "/price" []
        :return {:displayName String
                 :symbol String
-                :time Long
+                :dateTime String
                 ;:price Long}
                 :price String}
        ;:query-params [x :- Long, y :- Long]

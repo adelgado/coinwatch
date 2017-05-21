@@ -4,6 +4,7 @@
                  [metosin/compojure-api "1.2.0-alpha6" :exclude [compojure, metosin/muuntaja]]
                  [ring/ring "1.6.0-RC1"]
                  [compojure "1.6.0-beta3"]
+                 [ring-jetty/ring-ws "0.1.0-SNAPSHOT"]
                  [manifold "0.1.6"]
                  [io.nervous/kvlt "0.1.4"]
                  [org.clojure/core.async "0.3.441"]
@@ -22,7 +23,8 @@
   :plugins [[lein-cljsbuild "1.1.4"]
             [lein-garden "0.2.8"]]
   :ring {:handler coinwatch.handler/app
-         :async? true}
+         :async? true
+         :websockets {"/echo" coinwatch.ws-handler/app}}
 
   :uberjar-name "server.jar"
 
