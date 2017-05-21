@@ -7,6 +7,7 @@
 (re-frame/reg-event-db
  :initialize-db
  (fn  [_ _]
+   (re-frame/dispatch [:request-price])
    db/default-db))
 
 (re-frame/reg-event-db
@@ -28,19 +29,18 @@
                  :on-failure      [:bad-price-response]}
     :db  (assoc db :loading? true)}))
 
-
 (re-frame/reg-event-db
  :process-price-response
  (fn
    [db [_ response]]           ;; destructure the response from the event vector
    (-> db
        (assoc :loading? false) ;; take away that "Loading ..." UI 
-       (assoc :data (js->clj response)))))  ;; fairly lame processing
+       (assoc :currency (js->clj response)))))  ;; fairly lame processing
 
  (re-frame/reg-event-db
   :bad-price-response
   (fn
-    [db [_ response]]           ;; destructure the response from the event vector
+    [db [_ response]]
     (-> db
-        (assoc :loading? false) ;; take away that "Loading ..." UI 
-        (assoc :data (js->clj response)))))  ;; fairly lame processing
+        (assoc :loading? false)
+        (assoc :currency (js->clj response)))))

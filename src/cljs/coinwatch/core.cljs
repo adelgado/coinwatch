@@ -22,6 +22,7 @@
 
 (defn ^:export init []
   (routes/app-routes)
-  (re-frame/dispatch-sync [:initialize-db])
+  (re-frame/dispatch-sync [:initialize-db :request-price])
+  (re-frame/dispatch-sync [:request-price])
   (dev-setup)
   (mount-root))

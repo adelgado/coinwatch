@@ -3,9 +3,9 @@
     (:require [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
- :price
- (fn [db]
-   (:price (:data db))))
+ :currency
+ (fn [db _]
+   (:currency db)))
 
 (re-frame/reg-sub
  :active-panel

@@ -1,4 +1,7 @@
 (ns coinwatch.db)
 
 (def default-db
-  {:price "Unknown"})
+  {:currency
+   {:price "Unknown"
+    :symbol "Unknown"
+    :name "Unknown"}})

@@ -1,24 +1,25 @@
 (ns coinwatch.views
     (:require [re-frame.core :as re-frame]))
 
+(defn currency-card [currency]
+  (fn []
+    [:div {}
+     (:name currency)
+     (:symbol currency)
+     (:price currency)]))
 
 ;; home
 
 (defn home-panel []
-  (let [price (re-frame/subscribe [:price])]
-    (fn []
-      [:div ""
-        [:div (str "Current price is " @price)]
-        [:button {:on-click #(re-frame/dispatch [:request-price])} "Update price"]
-        [:div [:a {:href "#/about"} "About"]]])))
+  (fn []
+    (let [currency (re-frame/subscribe [:currency])]
+      (currency-card @currency))))
 
- 
 ;; about
 
 (defn about-panel []
   (fn []
-    [:div "This is the About Page."
-    [:div [:a {:href "#/"} "go to Home Page"]]]))
+    [:a {:href "#/"} "Home Page"]))
 
 ;; main
 
