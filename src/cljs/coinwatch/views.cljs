@@ -5,12 +5,14 @@
 ;; home
 
 (defn home-panel []
-  (let [name (re-frame/subscribe [:name])]
+  (let [price (re-frame/subscribe [:price])]
     (fn []
-      [:div (str "Hello from " @name ". This is the Home Page.")
-      [:button {:on-click #(re-frame/dispatch [:request])} "Click me for BTC"]
-      [:div [:a {:href "#/about"} "go to About Page"]]])))
+      [:div ""
+        [:div (str "Current price is" @price)]
+        [:button {:on-click #(re-frame/dispatch [:request-price])} "Update price"]
+        [:div [:a {:href "#/about"} "About"]]])))
 
+ 
 ;; about
 
 (defn about-panel []
@@ -20,7 +22,7 @@
 
 ;; main
 
-(defn- panels [panel-name]
+(defn panels [panel-name]
   (case panel-name
     :home-panel [home-panel]
     :about-panel [about-panel]

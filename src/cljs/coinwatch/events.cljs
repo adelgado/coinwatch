@@ -16,21 +16,21 @@
 
 
 (re-frame/reg-event-fx        ;; <-- note the `-fx` extension
- :request
+ :request-price
  (fn                ;; <-- the handler function
    [{db :db} _]     ;; <-- 1st argument is coeffect, from which we extract db 
 
    {:http-xhrio {:method          :get
-                 :uri             "http://api.coindesk.com/v1/bpi/currentprice.json"
+                 :uri             "http://localhost:3000/api/price"
                  :format          (ajax/json-request-format)
                  :response-format (ajax/json-response-format {:keywords? true}) 
-                 :on-success      [:process-response]
-                 :on-failure      [:bad-response]}
+                 :on-success      [:process-price-response]
+                 :on-failure      [:bad-price-response]}
     :db  (assoc db :loading? true)}))
 
 
 (re-frame/reg-event-db
- :process-response
+ :process-price-response
  (fn
    [db [_ response]]           ;; destructure the response from the event vector
    (-> db
@@ -38,7 +38,7 @@
        (assoc :data (js->clj response)))))  ;; fairly lame processing
 
  (re-frame/reg-event-db
-  :bad-response
+  :bad-price-response
   (fn
     [db [_ response]]           ;; destructure the response from the event vector
     (-> db
