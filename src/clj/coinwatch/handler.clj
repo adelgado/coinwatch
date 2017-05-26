@@ -39,6 +39,8 @@
                 :symbol (-> % (:body) (:bpi) (:USD) (:code))
                 :price (-> % (:body) (:bpi) (:USD) (:rate))}))))
 
+(def non-empty-string #"^(?!\s*$).+")
+
 (def app
   (api
    {:swagger
@@ -59,10 +61,10 @@
 
      (GET "/price" []
        :summary "gets current price in US dollar"
-       :return {:display-name String
-                :symbol String
-                :when String
-                :price String}
+       :return {:display-name non-empty-string
+                :symbol non-empty-string
+                :when non-empty-string
+                :price non-empty-string}
        (async/go
          (->
           (ok @bitcoin)
