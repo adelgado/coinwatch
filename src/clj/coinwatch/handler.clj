@@ -6,43 +6,40 @@
             [ring.util.http-response :refer :all]
             compojure.api.async))
 
-(def currency (atom {}))
+(def current-currency (atom {}))
 
 (defn ok-status? [req]
   (= 200 (:status req)))
+
+(defn get-currency [req]
+  {:when (-> req (:headers) (:date))
+   :symbol (-> req (:body) (:bpi) (:USD) (:code))
+   :price (-> req (:body) (:bpi) (:USD) (:rate))})
 
 ; investigate other kind of buffers
 (defn get-currency-chan [url]
   (async/pipe
    (kvlt.chan/request! {:url url :as :json})
-   (async/chan 1 (filter ok-status?))))
-
-
-;(def d (get-currency "http://api.coindesk.com/v1/bpi/currentprice.json"))
-
+   (async/chan 1 (comp (filter ok-status?)
+                       (map get-currency)))))
 
 (defn update-currency-loop [ms]
   ; time out conccorrente
-  ; mover logica do fetch corpo pra cima
   (let [url "http://api.coindesk.com/v1/bpi/currentprice.json"
         poison-chan (async/chan)]
     (async/go-loop []
-      (let [price-chan (get-currency-chan url)
-            [{:keys [body status headers] :as req} chosen-chan]
-
-            (async/alts!
-                                                                 [price-chan
-                                                                  poison-chan])]
+      (let [currency-chan (get-currency-chan url)
+            [currency chosen-chan] (async/alts! [currency-chan poison-chan])]
         (when (not= chosen-chan poison-chan)
-          (if (some? req)
-            (prn (reset! currency
-                         {:displayName (:chartName body)
-                          :symbol (-> body (:bpi) (:USD) (:code))
-                          :dateTime (:date headers)
-                          :price (-> body (:bpi) (:USD) (:rate))})))
+          (if (some? currency) ;; channel opened
+            (prn (reset! current-currency currency)))
           (async/<! (async/timeout ms))
           (recur))))
     poison-chan))
+
+(async/<!!
+ (get-currency-chan
+  "http://api.coindesk.com/v1/bpi/currentprice.json"))
 
 (def loop-control-chan (update-currency-loop 3000))
 

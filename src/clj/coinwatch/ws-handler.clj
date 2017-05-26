@@ -13,10 +13,12 @@
 
 (defn- on-text [session message]
   (doseq [session* @all-sessions]
-    (ws/send! session* (str
-                 (.. session* getSession getRemoteAddress getHostName)
-                 ":"
-                 message))))
+    (ws/send!
+     session*
+     (str
+      (.. session* getSession getRemoteAddress getHostName)
+      ":"
+      message))))
 
 (defn- on-bytes [session payload offset len]
   nil)
