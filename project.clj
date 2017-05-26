@@ -1,6 +1,7 @@
 (defproject coinwatch "0.1.0-SNAPSHOT"
   :dependencies [;server side deps
                  [org.clojure/clojure "1.8.0"]
+                 [environ "1.1.0"]
                  [metosin/compojure-api "1.2.0-alpha6" :exclude [compojure, metosin/muuntaja]]
                  [ring/ring "1.6.0-RC1"]
                  [compojure "1.6.0-beta3"]

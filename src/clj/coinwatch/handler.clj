@@ -2,6 +2,7 @@
   (:require [clojure.core.async :as async]
             [compojure.api.sweet :refer :all]
             [kvlt.core :as kvlt]
+            [coinwatch.cfg :refer [cfg]]
             [kvlt.chan :as kchan]
             [ring.util.http-response :refer :all]
             compojure.api.async))
@@ -26,8 +27,8 @@
 
 (start-currency-loop!
  currency-loop-poison
- 3000
- "http://api.coindesk.com/v1/bpi/currentprice.json"
+ (:timeout cfg)
+ (:coindesk-bitcoin-url cfg)
  bitcoin
  (comp (filter #(or (= 200 (:status %))
                     (prn "error fecthing currency for: "

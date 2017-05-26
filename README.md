@@ -33,7 +33,7 @@ lein garden auto
 ```
 lein clean
 lein figwheel dev
-lein ring server-headless
+lein ring with-profile server-headless
 ```
 
 Figwheel will automatically push cljs changes to the browser.
