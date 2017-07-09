@@ -1,10 +1,9 @@
 {:shared
- {:env {:coindesk-bitcoin-url "http://api.coindesk.com/v1/bpi/currentprice.json"}}
-
+ {:env {:auth-secret "Basic ="}} 
  :dev
  [:shared
-  {:env {:timeout 5000}}]
-
-:prod
-[:shared
- {:env {:timeout 3000}}]}
+  {:env {:db-host "localhost"
+         :db-name "coinwatch"
+         :db-port "5432"
+         :db-user "coinwatch"
+         :db-password ""}}]}

@@ -1,15 +1,14 @@
 (ns coinwatch.core
-    (:require [reagent.core :as reagent]
-              [re-frame.core :as re-frame]
-              [re-frisk.core :refer [enable-re-frisk!]]
-              [coinwatch.events]
-              [coinwatch.subs]
-              [coinwatch.routes :as routes]
-              [coinwatch.views :as views]
-              [coinwatch.config :as config]))
+  (:require [reagent.core :as reagent]
+            [re-frame.core :as re-frame]
+            [re-frisk.core :refer [enable-re-frisk!]]
+            [coinwatch.events]
+            [coinwatch.subs]
+            [coinwatch.routes :as routes]
+            [coinwatch.views.views :as views]
+            [coinwatch.config :as config]))
 
-
-(defn dev-setup []
+(defn dev-setup [] ;;move to config file
   (when config/debug?
     (enable-console-print!)
     (enable-re-frisk!)

@@ -1,12 +1,14 @@
 (ns coinwatch.events
-  (:require [re-frame.core :as re-frame]
+  (:require-macros [cljs.core.async.macros :refer [go]])
+  (:require [coinwatch.config]
+            [re-frame.core :as re-frame]
             [coinwatch.db :as db]
-            [ajax.core :as ajax]
-            [day8.re-frame.http-fx]))
+            [cljs-http.client :as http]
+            [cljs.core.async :refer [<!]]))
 
 (re-frame/reg-event-db
  :initialize-db
- (fn  [_ _]
+ (fn [_ _]
    db/default-db))
 
 (re-frame/reg-event-db
@@ -14,33 +16,51 @@
  (fn [db [_ active-panel]]
    (assoc db :active-panel active-panel)))
 
-
-(re-frame/reg-event-fx        ;; <-- note the `-fx` extension
- :request-price
- (fn                ;; <-- the handler function
-   [{db :db} _]     ;; <-- 1st argument is coeffect, from which we extract db 
-
-   {:http-xhrio {:method          :get
-                 :uri             "http://localhost:3000/api/price"
-                 :format          (ajax/json-request-format)
-                 :response-format (ajax/json-response-format {:keywords? true}) 
-                 :on-success      [:process-price-response]
-                 :on-failure      [:bad-price-response]}
-    :db  (assoc db :loading? true)}))
-
+(re-frame/reg-event-db
+ :login-success
+ (fn [db [_ body]]
+   (assoc db :user body
+             :active-panel :home)))
 
 (re-frame/reg-event-db
- :process-price-response
- (fn
-   [db [_ response]]           ;; destructure the response from the event vector
-   (-> db
-       (assoc :loading? false) ;; take away that "Loading ..." UI 
-       (assoc :data (js->clj response)))))  ;; fairly lame processing
+ :set-email
+ (fn [db [_ email]]
+   (assoc db :email email)))
 
- (re-frame/reg-event-db
-  :bad-price-response
-  (fn
-    [db [_ response]]           ;; destructure the response from the event vector
-    (-> db
-        (assoc :loading? false) ;; take away that "Loading ..." UI 
-        (assoc :data (js->clj response)))))  ;; fairly lame processing
+(re-frame/reg-event-db
+ :set-password
+ (fn [db [_ password]]
+   (assoc db :password password)))
+
+(re-frame/reg-event-db
+ :http-request-failure
+ (fn [db [_ response]]
+   (.log js/console (clj->js response))
+   (js/alert "Login failed. Please try again.")
+   (assoc db :loading? false)))
+
+(re-frame/reg-fx
+ :http
+ (fn [{:keys [url method on-success on-failure json-params query-params]} _]
+   (go
+     (let [url     (str "http://localhost:3000/api" url)
+           request (merge
+                    {:url        url
+                     :timeout    8000
+                     :method     method}
+                    (if (or (= :post method) (= :put method))
+                      {:json-params json-params}
+                      {:query-params query-params}))
+           {:keys [success body] :as response} (<! (http/request request))]
+       (if success
+         (re-frame/dispatch [on-success body])
+         (re-frame/dispatch [:http-request-failure response]))))))
+
+(re-frame/reg-event-fx
+ :login-request
+ (fn [{:keys [db]} _]
+   {:db   (assoc db :loading? true)
+    :http {:json-params (select-keys db [:email :password])
+           :url         "/login"
+           :method      :post
+           :on-success  :login-success}}))

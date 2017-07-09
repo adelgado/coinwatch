@@ -1,60 +1,24 @@
 # coinwatch
 
- [re-frame](https://github.com/Day8/re-frame) application designed to ... well, that part is up to you.
+You get to watch coins
 
-## Development Mode
+## Usage
 
-### Start Cider from Emacs:
+### Run the application locally
 
-Put this in your Emacs config file:
+`lein ring server-headless`
 
-```
-(setq cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
-```
+### Run the tests
 
-Navigate to a clojurescript file and start a figwheel REPL with `cider-jack-in-clojurescript` or (`C-c M-J`)
+`lein test`
 
-### Compile css:
-
-Compile css file once.
+### Packaging and running as standalone jar
 
 ```
-lein garden once
+lein do clean, ring uberjar
+java -jar target/server.jar
 ```
 
-Automatically recompile css file on change.
+### Packaging as war
 
-```
-lein garden auto
-```
-
-### Run application:
-
-```
-lein clean
-lein figwheel dev
-lein ring with-profile server-headless
-```
-
-Figwheel will automatically push cljs changes to the browser.
-
-Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
-
-### Run tests:
-
-```
-lein clean
-lein doo phantom test once
-```
-
-The above command assumes that you have [phantomjs](https://www.npmjs.com/package/phantomjs) installed. However, please note that [doo](https://github.com/bensu/doo) can be configured to run cljs.test in many other JS environments (chrome, ie, safari, opera, slimer, node, rhino, or nashorn).
-
-## Production Build
-
-
-To compile clojurescript to javascript:
-
-```
-lein clean
-lein cljsbuild once min
-```
+`lein ring uberwar`
