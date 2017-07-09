@@ -1,4 +1,6 @@
 (ns coinwatch.db)
 
 (def default-db
-  {:price "Unknown"})
+  {:loading? false
+   :username ""
+   :password ""})
