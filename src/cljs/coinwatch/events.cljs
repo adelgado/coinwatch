@@ -19,8 +19,8 @@
 (re-frame/reg-event-db
  :login-success
  (fn [db [_ body]]
-   (js/alert "Hello")
-   (assoc db :user body)))
+   (assoc db :user body
+             :active-panel :home)))
 
 (re-frame/reg-event-db
  :set-email
@@ -36,6 +36,7 @@
  :http-request-failure
  (fn [db [_ response]]
    (.log js/console (clj->js response))
+   (js/alert "Login failed. Please try again.")
    (assoc db :loading? false)))
 
 (re-frame/reg-fx

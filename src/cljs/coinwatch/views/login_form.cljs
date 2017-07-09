@@ -1,5 +1,4 @@
 (ns coinwatch.views.login_form
-  (:require-macros [clojure.core :refer [doto]])
   (:require [re-frame.core :as re-frame]))
 
 (defn login-form []
@@ -36,6 +35,7 @@
            [:div.box-footer
             [:input.btn.btn-primary
              {:type     "submit"
-              :on-click #(re-frame/dispatch [:login-request])
+              :on-click (fn [event]
+                          (.preventDefault event)
+                          (re-frame/dispatch [:login-request]))
               :value    "Log in"}]]]]]]])))
-
