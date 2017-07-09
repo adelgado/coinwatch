@@ -1,11 +1,15 @@
 (ns coinwatch.cfg
-  (:require [environ.core :refer [env]]))
+  (:require [environ.core :refer [env]]
+            [clojure.tools.logging :as log]))
+
 
 (def ^:private env-vars
-  [:coindesk-bitcoin-url
-   :timeout])
+  [:db-host :db-port :db-name :db-user :db-password])
 
 (doseq [v env-vars]
-  (if (nil? (v (select-keys env env-vars)))
-    (throw (Exception. (format "env variable '%s' is not set" v)))))
+  (when (nil? (v (select-keys env env-vars)))
+    (let [msg (format "env variable '%s' is not set" v)]
+      (throw (IllegalArgumentException. msg))
+      (log/error msg))))
 
+(def cfg (select-keys env env-vars))

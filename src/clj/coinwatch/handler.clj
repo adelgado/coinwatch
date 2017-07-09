@@ -1,79 +1,54 @@
 (ns coinwatch.handler
-  (:require [clojure.core.async :as async]
-            [compojure.api.sweet :refer :all]
-            [kvlt.core :as kvlt]
-            [coinwatch.cfg :refer [cfg]]
-            [kvlt.chan :as kchan]
-            [ring.util.http-response :refer :all]
-            compojure.api.async))
-
-(def bitcoin (atom {}))
-
-(def currency-loop-poison (async/chan 1))
-
-(defn start-currency-loop!
-  [poison loop-interval-ms url currency-atom transducer]
-  (async/go-loop []
-    (let [[currency chosen] (async/alts!
-                             [poison
-                              (async/pipe
-                               (kvlt.chan/request! {:url url :as :json})
-                               (async/chan 1 transducer))])]
-      (when (not= chosen poison)
-        (if (some? currency)
-          (prn (reset! currency-atom currency)))
-        (async/<! (async/timeout loop-interval-ms))
-        (recur)))))
-
-(start-currency-loop!
- currency-loop-poison
- (:timeout cfg)
- (:coindesk-bitcoin-url cfg)
- bitcoin
- (comp (filter #(or (= 200 (:status %))
-                    (prn "error fecthing currency for: "
-                         (-> % (:body) (:chartName)))))
-       (map #(do
-               {:when (-> % (:headers) (:date))
-                :chart-name (-> % (:body) (:chartName))
-                :symbol (-> % (:body) (:bpi) (:USD) (:code))
-                :price (-> % (:body) (:bpi) (:USD) (:rate))}))))
+  (:require [coinwatch.cfg :refer [cfg]]
+            [coinwatch.middleware :as m]
+            [compojure.route :as route]
+            [coinwatch.err :as err]
+            [coinwatch.service
+             [user :as user-service]]
+            [cheshire.core :as json]
+            [clojure.core.match :refer [match]]
+            [compojure.api
+             [swagger :as docs]
+             [sweet :as ring]]
+            [ring.util.http-response :as res]
+            [schema.core :as s]))
 
 (def non-empty-string #"^(?!\s*$).+")
 
 (def app
-  (api
-   {:swagger
-    {:ui "/"
-     :spec "/swagger.json"
-     :data {:info {:title "CoinWatch API Docs"
-                   :description "CoinWatch API Docs"}
-            :tags [{:name "CoinWatch API"}]}}}
+  (ring/api
+   {:exceptions {:handlers {:compojure.api.exception/default err/handler}}}
 
-   (context "/api" []
+   (route/resources "/")
+
+   (ring/context "/" []
+     (ring/GET "/status" []
+       :summary "Health Check Route"
+       {:status 200}))
+
+   (ring/context "/docs" req
+     :middleware [;m/has-auth? (m/authorized? (:auth-secret cfg))
+                  ]
+     (docs/swagger-routes
+      {:ui      "/"
+       :options {:ui {:swagger-docs "/docs/swagger.json"}}
+       :spec    "/swagger.json"
+       :data    {:info {:title "Coinwatch"}}}))
+
+   (ring/context "/api" []
      :tags ["api"]
+     ;:header-params [authorization :- non-empty-string]
+     :middleware [;(m/authorized? (:auth-secret cfg))
+                  ]
 
-     (DELETE "/price/loop" []
-       :summary "cancel fetching"
-       (do
-         (async/close! currency-loop-poison)
-         (ok)))
+     (ring/POST "/login" []
+       :summary "User login"
+       :body-params [email :- non-empty-string
+                     password :- non-empty-string]
+       :return {:id Long}
+       (match (user-service/authenticate email password)
+         [:ok {:id id}]
+         (res/ok {:id id})
 
-     (GET "/price" []
-       :summary "gets current price in US dollar"
-       :return {:display-name non-empty-string
-                :symbol non-empty-string
-                :when non-empty-string
-                :price non-empty-string}
-       (async/go
-         (->
-          (ok @bitcoin)
-          (assoc-in
-           [:headers "Access-Control-Allow-Origin"]
-           "*")
-          (assoc-in
-           [:headers "Access-Control-Allow-Methods"]
-           "GET,PUT,POST,DELETE,OPTIONS")
-          (assoc-in
-           [:headers "Access-Control-Allow-Headers"]
-           "X-Requested-With,Content-Type,Cache-Control")))))))
+         [:not-authorized]
+         (res/unauthorized))))))
