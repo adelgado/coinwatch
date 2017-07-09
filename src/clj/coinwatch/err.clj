@@ -11,10 +11,10 @@
      {:error (.getMessage e)
       :body  (:body-params request)
       :stack-trace
-             (-> e
-                 (.getStackTrace)
-                 (Arrays/toString)
-                 (clojure.string/replace #"," "\n"))})))
+      (-> e
+          (.getStackTrace)
+          (Arrays/toString)
+          (clojure.string/replace #"," "\n"))})))
 
   {:status  520
    :headers {"Content-Type" "application/json"}

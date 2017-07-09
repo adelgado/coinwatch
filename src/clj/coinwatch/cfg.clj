@@ -2,7 +2,6 @@
   (:require [environ.core :refer [env]]
             [clojure.tools.logging :as log]))
 
-
 (def ^:private env-vars
   [:db-host :db-port :db-name :db-user :db-password])
 

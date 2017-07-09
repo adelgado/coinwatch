@@ -10,8 +10,8 @@
 
 (defn authenticate* [db-spec email password]
   (jdbc/query
-    db-spec
-    ["select id from \"user\" where email = ? and password = ?"
-     email
-     password]))
+   db-spec
+   ["select id from \"user\" where email = ? and password = ?"
+    email
+    password]))
 

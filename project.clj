@@ -43,6 +43,7 @@
   :plugins [[lein-environ "1.1.0"]
             [lein-ring "0.10.0"]
             [lein-cljsbuild "1.1.4"]
+            [lein-cljfmt "0.5.6"]
             [lein-figwheel "0.5.9"]
             [lein-garden "0.2.8"]]
 

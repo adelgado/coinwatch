@@ -28,7 +28,7 @@
 
    (ring/context "/docs" req
      :middleware [;m/has-auth? (m/authorized? (:auth-secret cfg))
-                  ]
+]
      (docs/swagger-routes
       {:ui      "/"
        :options {:ui {:swagger-docs "/docs/swagger.json"}}
@@ -39,7 +39,7 @@
      :tags ["api"]
      ;:header-params [authorization :- non-empty-string]
      :middleware [;(m/authorized? (:auth-secret cfg))
-                  ]
+]
 
      (ring/POST "/login" []
        :summary "User login"
