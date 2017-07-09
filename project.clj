@@ -8,7 +8,7 @@
                  [org.clojure/tools.nrepl "0.2.12"]
                  [org.clojure/core.match "0.3.0-alpha4"]
                  [clojure.jdbc/clojure.jdbc-c3p0 "0.3.2"]
-                 [mysql/mysql-connector-java "6.0.5"]
+                 [postgresql "9.3-1102.jdbc41"]
                  [de.ubercode.clostache/clostache "1.4.0"]
                  [ring "1.6.1"]
                  [ring/ring-mock "0.3.0"]
